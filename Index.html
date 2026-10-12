@@ -1,0 +1,384 @@
+
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Checklist Centralizat Retail</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f2f5fa;
+      color: #17243a;
+    }
+    header {
+      background: #123c75;
+      color: white;
+      padding: 24px 18px;
+    }
+    header h1 { margin: 0 0 6px; font-size: 23px; }
+    header p { margin: 0; opacity: .85; }
+    main { max-width: 850px; margin: auto; padding: 16px; }
+    .card {
+      background: white;
+      border-radius: 16px;
+      padding: 18px;
+      margin-bottom: 16px;
+      box-shadow: 0 3px 14px #18375a10;
+    }
+    label { display: block; font-weight: 600; margin: 12px 0 5px; }
+    input, select, textarea, button {
+      font: inherit;
+      border-radius: 9px;
+    }
+    input, select, textarea {
+      width: 100%;
+      padding: 11px;
+      border: 1px solid #cad3df;
+      background: white;
+    }
+    textarea { min-height: 65px; resize: vertical; }
+    button {
+      border: none;
+      padding: 12px 15px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    .primary { background: #1457a6; color: white; }
+    .secondary { background: #eaf0f8; color: #173a65; }
+    .danger { background: #fff0ee; color: #ad2e26; }
+    .row { display: flex; gap: 9px; flex-wrap: wrap; }
+    .row > * { flex: 1; }
+    .question { border-top: 1px solid #e4eaf1; padding: 17px 0; }
+    .question strong { display: block; margin-bottom: 10px; }
+    .choices { display: flex; gap: 7px; flex-wrap: wrap; }
+    .choice { flex: 1; min-width: 65px; background: #eef2f7; }
+    .choice.selected.ok { background: #18734a; color: white; }
+    .choice.selected.nok { background: #b82e2e; color: white; }
+    .choice.selected.na { background: #5b6576; color: white; }
+    .choice.selected.empty { background: #1457a6; color: white; }
+    .score { font-size: 32px; font-weight: 800; color: #1457a6; }
+    .muted { color: #66758a; font-size: 13px; }
+    .section-title { color: #123c75; margin-top: 0; }
+    .hidden { display: none; }
+    .notice {
+      background: #fff6df;
+      padding: 12px;
+      border-radius: 10px;
+      color: #75500b;
+      font-size: 13px;
+      margin-top: 12px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Checklist Centralizat Retail</h1>
+    <p id="subtitle">Audit operațional magazine</p>
+  </header>
+
+  <main>
+    <div class="card">
+      <label for="language">Language / Limbă</label>
+      <select id="language" onchange="render()">
+        <option value="ro">Română</option>
+        <option value="en">English</option>
+      </select>
+
+      <label id="storeLabel" for="store">Magazin</label>
+      <input id="store" placeholder="Numele magazinului">
+
+      <label id="managerLabel" for="manager">Manager</label>
+      <input id="manager">
+
+      <label id="auditorLabel" for="auditor">Responsabil audit</label>
+      <input id="auditor">
+
+      <label id="dateLabel" for="date">Data auditului</label>
+      <input id="date" type="date">
+
+      <label id="shiftLabel" for="shift">Tură</label>
+      <select id="shift">
+        <option value="opening">Deschidere</option>
+        <option value="middle">Intermediar</option>
+        <option value="closing">Închidere</option>
+      </select>
+    </div>
+
+    <div class="card">
+      <h2 id="summaryTitle">Rezultate</h2>
+      <div class="score" id="score">—</div>
+      <p id="counts">OK: 0 | NOK: 0 | N/A: 0 | Neverificat: 0</p>
+      <p id="completion">Completare: 0%</p>
+    </div>
+
+    <div id="sections"></div>
+
+    <div class="card">
+      <div class="row">
+        <button class="secondary" onclick="downloadJSON()" id="exportBtn">
+          Exportă datele
+        </button>
+        <button class="danger" onclick="resetAudit()" id="resetBtn">
+          Resetează
+        </button>
+      </div>
+      <div class="notice" id="demoNotice">
+        PROTOTIP: Datele nu sunt salvate pe un server.
+        Nu utiliza pentru audituri oficiale.
+      </div>
+    </div>
+  </main>
+
+<script>
+const sections = [
+  ["Curățenie & ordine", "Cleaning & Order"],
+  ["Depozit & stoc", "Warehouse & Stock"],
+  ["Prezentarea produselor", "Product Presentation"],
+  ["Customer Service", "Customer Service"],
+  ["Recomandare & vânzare activă", "Recommendation & Active Selling"],
+  ["Ambianță", "Ambience"],
+  ["Echipă & disciplină", "Team & Discipline"],
+  ["Casă & finalizarea vânzării", "Checkout & Sale Completion"],
+  ["Control vânzări – final de zi", "End-of-Day Sales Control"]
+];
+
+// Întrebările exacte vor fi importate din checklistul original.
+// Exemplul de mai jos demonstrează funcționalitatea formularului.
+const questions = [
+  {
+    id: "DEMO-001",
+    section: 0,
+    ro: "Întrebare demonstrativă – înlocuiește cu întrebarea originală",
+    en: "Demo question – replace with the original question"
+  },
+  {
+    id: "DEMO-002",
+    section: 1,
+    ro: "A doua întrebare demonstrativă",
+    en: "Second demo question"
+  }
+];
+
+let answers = {};
+
+const dictionary = {
+  ro: {
+    subtitle: "Audit operațional magazine",
+    store: "Magazin",
+    manager: "Manager",
+    auditor: "Responsabil audit",
+    date: "Data auditului",
+    shift: "Tură",
+    shifts: ["Deschidere", "Intermediar", "Închidere"],
+    summary: "Rezultate",
+    completion: "Completare",
+    unanswered: "Neverificat",
+    observation: "Observații",
+    action: "Acțiune corectivă",
+    export: "Exportă datele",
+    reset: "Resetează",
+    confirm: "Resetezi toate răspunsurile?",
+    undefined: "Scor indisponibil",
+    demo: "PROTOTIP: Datele nu sunt salvate pe un server. Nu utiliza pentru audituri oficiale."
+  },
+  en: {
+    subtitle: "Retail operational audit",
+    store: "Store",
+    manager: "Manager",
+    auditor: "Auditor",
+    date: "Audit date",
+    shift: "Shift",
+    shifts: ["Opening", "Intermediate", "Closing"],
+    summary: "Results",
+    completion: "Completion",
+    unanswered: "Unanswered",
+    observation: "Observation",
+    action: "Corrective action",
+    export: "Export data",
+    reset: "Reset",
+    confirm: "Reset all answers?",
+    undefined: "Score unavailable",
+    demo: "PROTOTYPE: Data is not saved to a server. Do not use for official audits."
+  }
+};
+
+function lang() {
+  return document.getElementById("language").value;
+}
+
+function t(key) {
+  return dictionary[lang()][key];
+}
+
+function safe(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;");
+}
+
+function updateAnswer(id, field, value) {
+  if (!answers[id]) {
+    answers[id] = { status: "", observation: "", action: "" };
+  }
+  answers[id][field] = value;
+  if (field === "status") render();
+  else updateSummary();
+}
+
+function render() {
+  const l = lang();
+  document.documentElement.lang = l;
+
+  const ids = {
+    subtitle: "subtitle",
+    storeLabel: "store",
+    managerLabel: "manager",
+    auditorLabel: "auditor",
+    dateLabel: "date",
+    shiftLabel: "shift",
+    summaryTitle: "summary",
+    exportBtn: "export",
+    resetBtn: "reset",
+    demoNotice: "demo"
+  };
+
+  for (const [id, key] of Object.entries(ids)) {
+    document.getElementById(id).textContent = t(key);
+  }
+
+  const shift = document.getElementById("shift");
+  [...shift.options].forEach((opt, i) => {
+    opt.textContent = t("shifts")[i];
+  });
+
+  const root = document.getElementById("sections");
+  root.innerHTML = "";
+
+  sections.forEach((section, sectionIndex) => {
+    const items = questions.filter(q => q.section === sectionIndex);
+    if (!items.length) return;
+
+    const card = document.createElement("div");
+    card.className = "card";
+
+    let html = `<h2 class="section-title">${safe(section[l === "ro" ? 0 : 1])}</h2>`;
+
+    items.forEach((q, i) => {
+      const a = answers[q.id] || { status: "", observation: "", action: "" };
+
+      html += `<div class="question">
+        <strong>${i + 1}. ${safe(q[l])}</strong>
+        <div class="choices">`;
+
+      const choices = [
+        ["OK", "ok"],
+        ["NOK", "nok"],
+        ["N/A", "na"],
+        [t("unanswered"), ""]
+      ];
+
+      choices.forEach(([label, value]) => {
+        const cls = value || "empty";
+        const selected = a.status === value ? "selected" : "";
+        html += `<button class="choice ${cls} ${selected}"
+          data-id="${safe(q.id)}" data-status="${safe(value)}"
+          type="button">${safe(label)}</button>`;
+      });
+
+      html += `</div>
+        <label>${t("observation")}</label>
+        <textarea data-id="${safe(q.id)}" data-field="observation">${safe(a.observation)}</textarea>
+        <label>${t("action")}</label>
+        <textarea data-id="${safe(q.id)}" data-field="action">${safe(a.action)}</textarea>
+      </div>`;
+    });
+
+    card.innerHTML = html;
+    root.appendChild(card);
+  });
+
+  root.querySelectorAll("[data-status]").forEach(button => {
+    button.addEventListener("click", () => {
+      updateAnswer(button.dataset.id, "status", button.dataset.status);
+    });
+  });
+
+  root.querySelectorAll("textarea[data-field]").forEach(field => {
+    field.addEventListener("input", () => {
+      updateAnswer(field.dataset.id, field.dataset.field, field.value);
+    });
+  });
+
+  updateSummary();
+}
+
+function updateSummary() {
+  let ok = 0, nok = 0, na = 0, unanswered = 0;
+
+  questions.forEach(q => {
+    const status = answers[q.id]?.status || "";
+    if (status === "OK") ok++;
+    else if (status === "NOK") nok++;
+    else if (status === "N/A") na++;
+    else unanswered++;
+  });
+
+  const evaluated = ok + nok;
+  const conformity = evaluated
+    ? (100 * ok / evaluated).toFixed(1) + "%"
+    : t("undefined");
+
+  const completion = questions.length
+    ? (100 * (ok + nok + na) / questions.length).toFixed(1)
+    : "0";
+
+  document.getElementById("score").textContent = conformity;
+  document.getElementById("counts").textContent =
+    `OK: ${ok} | NOK: ${nok} | N/A: ${na} | ${t("unanswered")}: ${unanswered}`;
+
+  document.getElementById("completion").textContent =
+    `${t("completion")}: ${completion}%`;
+}
+
+function downloadJSON() {
+  const data = {
+    prototype: true,
+    store: document.getElementById("store").value,
+    manager: document.getElementById("manager").value,
+    auditor: document.getElementById("auditor").value,
+    date: document.getElementById("date").value,
+    shift: document.getElementById("shift").value,
+    answers
+  };
+
+  const blob = new Blob(
+    [JSON.stringify(data, null, 2)],
+    { type: "application/json" }
+  );
+
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "audit-demo.json";
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function resetAudit() {
+  if (!confirm(t("confirm"))) return;
+  answers = {};
+  render();
+}
+
+document.getElementById("date").value =
+  new Date().toLocaleDateString("en-CA");
+
+render();
+</script>
+</body>
+</html>
