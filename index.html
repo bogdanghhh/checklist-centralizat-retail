@@ -459,7 +459,12 @@ function downloadJSON() {
   link.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
-
+async function salveazaAudit() {
+  alert(
+    "Pregătim salvarea securizată în Supabase. " +
+    "Auditul nu a fost încă salvat."
+  );
+}
 function resetAudit() {
   if (!confirm(t("confirm"))) return;
   answers = {};
