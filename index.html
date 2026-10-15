@@ -460,10 +460,47 @@ function downloadJSON() {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 async function salveazaAudit() {
-  alert(
-    "Pregătim salvarea securizată în Supabase. " +
-    "Auditul nu a fost încă salvat."
-  );
+  const token = new URLSearchParams(window.location.search).get("token");
+  const storeId = document.getElementById("store").value;
+  const manager = document.getElementById("manager").value.trim();
+  const auditor = document.getElementById("auditor").value.trim();
+  const date = document.getElementById("date").value;
+  const shift = document.getElementById("shift").value;
+
+  if (!token || !storeId || !manager || !auditor || !date || !shift) {
+    alert("Completează toate câmpurile și deschide formularul dintr-un link valid.");
+    return;
+  }
+
+  const auditAnswers = Object.entries(answers).map(([questionId, value]) => ({
+    question_id: questionId,
+    ...(typeof value === "object" && value !== null
+      ? value
+      : { answer: value })
+  }));
+
+  try {
+    const { data, error } = await supabaseClient.rpc(
+      "save_audit_secure",
+      {
+        p_token: token,
+        p_store_id: storeId,
+        p_manager_name: manager,
+        p_auditor_name: auditor,
+        p_audit_date: date,
+        p_shift: shift,
+        p_language: typeof lang !== "undefined" ? lang : "ro",
+        p_answers: auditAnswers
+      }
+    );
+
+    if (error) throw error;
+
+    alert("Auditul a fost salvat în Supabase! ID: " + data);
+  } catch (error) {
+    console.error("Eroare salvare audit:", error);
+    alert("Auditul NU a fost salvat: " + error.message);
+  }
 }
 function resetAudit() {
   if (!confirm(t("confirm"))) return;
