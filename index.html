@@ -505,6 +505,45 @@ async function verificaSupabase() {
 }
 
 verificaSupabase();
+  async function incarcaMagazine() {
+  const lista = document.getElementById("store");
+  const token = new URLSearchParams(
+    window.location.search
+  ).get("token");
+
+  lista.innerHTML =
+    '<option value="">Alege magazinul</option>';
+  lista.disabled = true;
+
+  if (!token) {
+    lista.innerHTML =
+      '<option value="">Link de audit necesar</option>';
+    return;
+  }
+
+  const { data, error } = await supabaseClient.rpc(
+    "get_audit_link_stores",
+    { p_token: token }
+  );
+
+  if (error || !data || data.length === 0) {
+    lista.innerHTML =
+      '<option value="">Link invalid sau fără magazine</option>';
+    console.error(error);
+    return;
+  }
+
+  data.forEach(magazin => {
+    const optiune = document.createElement("option");
+    optiune.value = magazin.id;
+    optiune.textContent = magazin.name;
+    lista.appendChild(optiune);
+  });
+
+  lista.disabled = false;
+}
+
+incarcaMagazine();
 </script>
 </body>
 
