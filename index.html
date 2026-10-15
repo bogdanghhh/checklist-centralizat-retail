@@ -481,7 +481,23 @@ render();
   );
 
 </script>
+<script>
+async function verificaSupabase() {
+  const { data, error } = await supabaseClient
+    .from('audit_questions')
+    .select('id');
 
+  if (error) {
+    alert('Eroare Supabase: ' + error.message);
+    console.error(error);
+    return;
+  }
+
+  alert('Conexiune reusita! Intrebari gasite: ' + data.length);
+}
+
+verificaSupabase();
+</script>
 </body>
 
 </html>
