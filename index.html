@@ -489,7 +489,7 @@ async function salveazaAudit() {
         p_auditor_name: auditor,
         p_audit_date: date,
         p_shift: shift,
-        p_language: typeof lang !== "undefined" ? lang : "ro",
+        p_language: document.getElementById("language").value,
         p_answers: auditAnswers
       }
     );
