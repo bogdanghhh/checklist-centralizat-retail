@@ -339,7 +339,7 @@ function render() {
   };
 
   for (const [id, key] of Object.entries(ids)) {
-    document.getElementById(id).textContent = t(key);
+  if (document.getElementById(id)) document.getElementById(id).textContent = t(key);
   }
 
   const shift = document.getElementById("shift");
