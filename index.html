@@ -505,12 +505,32 @@ const questionMap = new Map(
   ])
 );
 
-const auditAnswers = questions.map((q, index) => {
-  const positionInSection =
-    questions.slice(0, index + 1)
-      .filter(item => item.section === q.section).length;
+const auditAnswers = questions
+  .map((q, index) => {
+    const positionInSection =
+      questions.slice(0, index + 1)
+        .filter(item => item.section === q.section).length;
 
-  return {
+    return {
+      question_id: questionMap.get(
+        `${q.section}:${positionInSection}`
+      ),
+      answer: answers[q.id]?.status || "",
+      observation: answers[q.id]?.observation || "",
+      corrective_action: answers[q.id]?.action || ""
+    };
+  })
+  .filter(a => ["OK", "NOK", "N/A"].includes(a.answer));
+
+if (auditAnswers.length === 0) {
+  alert("Verifică cel puțin o întrebare înainte de salvare.");
+  return;
+}
+
+if (auditAnswers.some(a => !a.question_id)) {
+  alert("Nu am putut identifica unele întrebări în Supabase.");
+  return;
+}
     question_id: questionMap.get(
       `${q.section}:${positionInSection}`
     ),
