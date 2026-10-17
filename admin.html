@@ -106,7 +106,7 @@ th,td{padding:10px;border-bottom:1px solid #e4eaf1;vertical-align:top}
       <h2>Audituri salvate</h2>
       <p id="auditStatus" class="muted">Se încarcă auditurile...</p>
       <div class="table-scroll">
-        <table><thead><tr><th>Data</th><th>Magazin</th><th>Auditor</th><th>Verificate</th><th>Scor</th></tr></thead>
+        <table><thead><tr><th>Data</th><th>Magazin</th><th>Auditor</th><th>Verificate</<th>Scor</th><th>Acțiuni</th></tr></thead>
         <tbody id="auditRows"></tbody></table>
       </div>
       <h3>Detalii audit</h3>
@@ -219,6 +219,54 @@ function drawAuditTable(){
     const c=counts(a),row=node("tr");row.style.cursor="pointer";
     [dateLabel(a.audit_date),storeName(a),a.auditor_name||"—",c.total+" / 90",scoreText(c.score)].forEach(v=>addCell(row,v));
     row.addEventListener("click",()=>drawAuditDetails(a));
+    const deleteCell = document.createElement("td");
+const deleteBtn = document.createElement("button");
+
+deleteBtn.type = "button";
+deleteBtn.textContent = "Șterge";
+deleteBtn.style.background = "#b82e2e";
+deleteBtn.style.color = "white";
+deleteBtn.style.padding = "8px 12px";
+
+deleteBtn.addEventListener("click", async event => {
+  event.stopPropagation();
+
+  const confirmare = confirm(
+    "Sigur vrei să ștergi definitiv auditul?\n\n" +
+    "Magazin: " + storeName(a) + "\n" +
+    "Data: " + dateLabel(a.audit_date) + "\n\n" +
+    "Această acțiune nu poate fi anulată."
+  );
+
+  if (!confirmare) return;
+
+  deleteBtn.disabled = true;
+  deleteBtn.textContent = "Se șterge...";
+
+  try {
+    const { data, error } = await client.rpc(
+      "admin_delete_audit",
+      { p_audit_id: a.id }
+    );
+
+    if (error) throw error;
+    if (data !== true) {
+      throw new Error("Auditul nu a fost găsit.");
+    }
+
+    selectedStore = null;
+    await loadAudits();
+
+    alert("Auditul a fost șters cu succes!");
+  } catch (error) {
+    alert("Eroare la ștergere: " + error.message);
+    deleteBtn.disabled = false;
+    deleteBtn.textContent = "Șterge";
+  }
+});
+
+deleteCell.appendChild(deleteBtn);
+row.appendChild(deleteCell);
     rows.appendChild(row);
   });
 }
