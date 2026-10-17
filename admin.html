@@ -89,6 +89,17 @@
         magazine și linkuri pentru auditori.
       </p>
       <button id="logoutBtn" class="secondary">Deconectare</button>
+      <div class="tabs">
+  <button id="tabAdmin" type="button" onclick="showTab('admin')">
+    Administrare
+  </button>
+  <button id="tabAnalysis" type="button" onclick="showTab('analysis')">
+    Analiză Audit
+  </button>
+</div>
+<div id="administrationTab">
+  </div>
+<div id="analysisTab" class="hidden">
       <div style="margin-top:30px">
   <h2>Gestionare magazine</h2>
   <form id="storeForm">
@@ -113,7 +124,8 @@
   <p id="compareSummary" class="muted"></p>
   <div id="compareResults" style="overflow-x:auto"></div>
 </div>
-
+</div>
+<div id="administrationAudits">
       <div id="auditArea" style="margin-top:30px">
   <h2>Audituri salvate</h2>
   <p id="auditStatus" class="muted">Se încarcă auditurile...</p>
@@ -343,7 +355,26 @@ document.getElementById("storeForm").addEventListener(
     button.disabled = false;
   }
 );
+    function showTab(tab) {
+  document.getElementById("administrationTab")
+    .classList.toggle("hidden", tab !== "admin");
+
+  document.getElementById("administrationAudits")
+    .classList.toggle("hidden", tab !== "admin");
+
+  document.getElementById("analysisTab")
+    .classList.toggle("hidden", tab !== "analysis");
+
+  document.getElementById("tabAdmin").classList.toggle(
+    "secondary", tab !== "admin"
+  );
+
+  document.getElementById("tabAnalysis").classList.toggle(
+    "secondary", tab !== "analysis"
+  );
+}
     function showAdmin(email) {
+      showTab("admin");
       loadStores();
       loadAudits();
       loginPanel.classList.add("hidden");
