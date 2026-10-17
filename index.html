@@ -472,12 +472,63 @@ async function salveazaAudit() {
     return;
   }
 
-  const auditAnswers = Object.entries(answers).map(([questionId, value]) => ({
-    question_id: questionId,
-    ...(typeof value === "object" && value !== null
-      ? value
-      : { answer: value })
-  }));
+ const { data: dbQuestions, error: questionsError } =
+  await supabaseClient
+    .from("audit_questions")
+    .select("id, question_ro, sort_order, section_id")
+    .eq("is_active", true);
+
+if (questionsError) {
+  alert("Eroare la încărcarea întrebărilor: " + questionsError.message);
+  return;
+}
+
+const { data: dbSections, error: sectionsError } =
+  await supabaseClient
+    .from("audit_sections")
+    .select("id, sort_order")
+    .eq("is_active", true);
+
+if (sectionsError) {
+  alert("Eroare la încărcarea secțiunilor: " + sectionsError.message);
+  return;
+}
+
+const sectionOrder = new Map(
+  dbSections.map(s => [s.id, s.sort_order - 1])
+);
+
+const questionMap = new Map(
+  dbQuestions.map(q => [
+    `${sectionOrder.get(q.section_id)}:${q.sort_order}`,
+    q.id
+  ])
+);
+
+const auditAnswers = questions.map((q, index) => {
+  const positionInSection =
+    questions.slice(0, index + 1)
+      .filter(item => item.section === q.section).length;
+
+  return {
+    question_id: questionMap.get(
+      `${q.section}:${positionInSection}`
+    ),
+    answer: answers[q.id]?.status || "",
+    observation: answers[q.id]?.observation || "",
+    corrective_action: answers[q.id]?.action || ""
+  };
+});
+
+if (
+  auditAnswers.some(a =>
+    !a.question_id ||
+    !["OK", "NOK", "N/A"].includes(a.answer)
+  )
+) {
+  alert("Completează toate cele 90 de întrebări înainte de salvare.");
+  return;
+}
 
   try {
     const { data, error } = await supabaseClient.rpc(
