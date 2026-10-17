@@ -104,6 +104,16 @@
   <h3>Magazine existente</h3>
   <div id="storeList">Se încarcă...</div>
 </div>
+      <div style="margin-top:30px" id="compareArea">
+  <h2>Comparații audituri</h2>
+  <label for="compareStore">Alege magazinul</label>
+  <select id="compareStore" style="width:100%;padding:12px;border:1px solid #cad3df;border-radius:9px">
+    <option value="">Toate magazinele</option>
+  </select>
+  <p id="compareSummary" class="muted"></p>
+  <div id="compareResults" style="overflow-x:auto"></div>
+</div>
+
       <div id="auditArea" style="margin-top:30px">
   <h2>Audituri salvate</h2>
   <p id="auditStatus" class="muted">Se încarcă auditurile...</p>
@@ -145,6 +155,48 @@
       loginPanel.classList.remove("hidden");
       adminPanel.classList.add("hidden");
     }
+    function renderComparisons(audits) {
+  const select = document.getElementById("compareStore");
+  const summary = document.getElementById("compareSummary");
+  const results = document.getElementById("compareResults");
+  const selected = select.value;
+  const stores = [...new Map(audits.filter(a => a.store_id).map(a => [a.store_id, a.stores?.name || "Magazin"])).entries()];
+  select.replaceChildren(new Option("Toate magazinele", ""));
+  stores.sort((a,b) => a[1].localeCompare(b[1], "ro"));
+  stores.forEach(([id,name]) => select.add(new Option(name,id)));
+  if (stores.some(([id]) => id === selected)) select.value = selected;
+
+  function draw() {
+    const filtered = audits.filter(a => !select.value || a.store_id === select.value)
+      .slice().sort((a,b) => (a.audit_date || "").localeCompare(b.audit_date || ""));
+    summary.textContent = filtered.length + " audituri pentru selecția curentă. Scorul exclude răspunsurile N/A.";
+    results.replaceChildren();
+    if (!filtered.length) { results.textContent = "Nu există audituri pentru acest magazin."; return; }
+    const table = document.createElement("table");
+    table.style.cssText = "width:100%;border-collapse:collapse;text-align:left";
+    const head = document.createElement("tr");
+    ["Data", "Magazin", "Auditor", "Verificate", "Scor"].forEach(label => {
+      const th = document.createElement("th"); th.textContent = label; th.style.padding = "9px"; head.appendChild(th);
+    });
+    table.appendChild(head);
+    filtered.forEach(audit => {
+      const answers = audit.audit_answers || [];
+      const ok = answers.filter(a => a.answer === "OK").length;
+      const nok = answers.filter(a => a.answer === "NOK").length;
+      const score = ok + nok ? (100 * ok / (ok + nok)).toFixed(1) + "%" : "—";
+      const tr = document.createElement("tr");
+      [audit.audit_date || "—", audit.stores?.name || "—", audit.auditor_name || "—", answers.length + " / 90", score].forEach(value => {
+        const td = document.createElement("td"); td.textContent = value;
+        td.style.cssText = "padding:9px;border-bottom:1px solid #e4eaf1";
+        tr.appendChild(td);
+      });
+      table.appendChild(tr);
+    });
+    results.appendChild(table);
+  }
+  select.onchange = draw;
+  draw();
+}
 async function loadAudits() {
   const status = document.getElementById("auditStatus");
   const rows = document.getElementById("auditRows");
@@ -173,6 +225,8 @@ async function loadAudits() {
   status.textContent = audits.length
     ? `${audits.length} audituri găsite`
     : "Nu există încă audituri salvate.";
+  renderComparisons(audits);
+
 
   function addCell(row, value) {
     const cell = document.createElement("td");
