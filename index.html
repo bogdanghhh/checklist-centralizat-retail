@@ -374,7 +374,7 @@ function render() {
       ];
 
       choices.forEach(([label, value]) => {
-        const cls = value || "empty";
+        const cls = value === "N/A" ? "na" : (value ? value.toLowerCase() : "empty");
         const selected = a.status === value ? "selected" : "";
         html += `<button class="choice ${cls} ${selected}"
           data-id="${safe(q.id)}" data-status="${safe(value)}"
