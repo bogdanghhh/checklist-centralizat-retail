@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Administrator | Checklist Centralizat Retail</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: #f2f5fa;
+      color: #17243a;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    header {
+      padding: 24px 18px;
+      background: #123c75;
+      color: white;
+    }
+    header h1 { margin: 0 0 5px; font-size: 23px; }
+    header p { margin: 0; opacity: .85; }
+    main { max-width: 650px; margin: 35px auto; padding: 16px; }
+    .card {
+      background: white;
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 3px 14px #18375a10;
+    }
+    label { display: block; font-weight: 600; margin: 16px 0 6px; }
+    input {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #cad3df;
+      border-radius: 9px;
+      font: inherit;
+    }
+    button {
+      padding: 12px 18px;
+      border: 0;
+      border-radius: 9px;
+      background: #1457a6;
+      color: white;
+      font: inherit;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 18px;
+    }
+    button:disabled { opacity: .5; cursor: wait; }
+    .secondary { background: #eaf0f8; color: #173a65; }
+    .hidden { display: none; }
+    .error { color: #b82e2e; }
+    .success { color: #18734a; }
+    .muted { color: #66758a; font-size: 14px; }
+    #message { margin-top: 15px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Checklist Centralizat Retail</h1>
+    <p>Panou administrator</p>
+  </header>
+
+  <main>
+    <div class="card" id="loginPanel">
+      <h2>Autentificare administrator</h2>
+      <p class="muted">Folosește contul configurat în Supabase.</p>
+
+      <form id="loginForm">
+        <label for="email">Adresă de e-mail</label>
+        <input id="email" type="email" autocomplete="username" required>
+
+        <label for="password">Parolă</label>
+        <input id="password" type="password"
+               autocomplete="current-password" required>
+
+        <button id="loginBtn" type="submit">Autentificare</button>
+      </form>
+
+      <p id="message" role="status"></p>
+    </div>
+
+    <div class="card hidden" id="adminPanel">
+      <h2>Bine ai venit!</h2>
+      <p class="success">Autentificare administrator reușită.</p>
+      <p id="adminEmail" class="muted"></p>
+      <p>Contul este pregătit pentru panoul de administrare.</p>
+      <p class="muted">
+        Următorul pas: lista auditurilor, comparații,
+        magazine și linkuri pentru auditori.
+      </p>
+      <button id="logoutBtn" class="secondary">Deconectare</button>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const client = window.supabase.createClient(
+      "https://dhjmypzmilvuitqsvvqy.supabase.co",
+      "sb_publishable_NGwEbhHbW5UlrYft_xNHQg_CVNk711z"
+    );
+
+    const loginPanel = document.getElementById("loginPanel");
+    const adminPanel = document.getElementById("adminPanel");
+    const message = document.getElementById("message");
+    const loginBtn = document.getElementById("loginBtn");
+
+    function showLogin() {
+      loginPanel.classList.remove("hidden");
+      adminPanel.classList.add("hidden");
+    }
+
+    function showAdmin(email) {
+      loginPanel.classList.add("hidden");
+      adminPanel.classList.remove("hidden");
+      document.getElementById("adminEmail").textContent = email || "";
+    }
+
+    async function checkAdmin() {
+      const { data: { user }, error: userError } =
+        await client.auth.getUser();
+
+      if (userError || !user) {
+        showLogin();
+        return;
+      }
+
+      const { data, error } = await client.rpc("is_app_admin");
+
+      if (error || data !== true) {
+        await client.auth.signOut();
+        showLogin();
+        message.className = "error";
+        message.textContent =
+          "Contul nu are drepturi de administrator.";
+        return;
+      }
+
+      showAdmin(user.email);
+    }
+
+    document.getElementById("loginForm").addEventListener(
+      "submit",
+      async (event) => {
+        event.preventDefault();
+        message.textContent = "";
+        loginBtn.disabled = true;
+
+        const email = document.getElementById("email").value.trim();
+        const password = document.getElementById("password").value;
+
+        try {
+          const { error } = await client.auth.signInWithPassword({
+            email,
+            password
+          });
+
+          if (error) throw error;
+          await checkAdmin();
+        } catch (error) {
+          message.className = "error";
+          message.textContent =
+            "Autentificare nereușită: " + error.message;
+        } finally {
+          loginBtn.disabled = false;
+          document.getElementById("password").value = "";
+        }
+      }
+    );
+
+    document.getElementById("logoutBtn").addEventListener(
+      "click",
+      async () => {
+        await client.auth.signOut();
+        showLogin();
+        message.textContent = "";
+      }
+    );
+
+    checkAdmin();
+  </script>
+</body>
+</html>
