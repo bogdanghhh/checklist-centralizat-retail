@@ -420,8 +420,15 @@ el("loginForm").addEventListener("submit",async event=>{
     el("loginBtn").disabled=false;el("password").value="";
   }
 });
-el("logoutBtn").addEventListener("click",async()=>{
-  await client.auth.signOut();showLogin();el("message").textContent="";
+const logoutButton = el("logoutBtn");
+
+if (logoutButton) {
+  logoutButton.addEventListener("click", async () => {
+    await client.auth.signOut();
+    showLogin();
+    el("message").textContent = "";
+  });
+}
 });
   async function genereazaLinkAudit() {
   const { data, error } = await client.rpc(
