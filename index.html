@@ -381,11 +381,22 @@ function render() {
           type="button">${safe(label)}</button>`;
       });
 
-      html += `</div>
-        <label>${t("observation")}</label>
-        <textarea data-id="${safe(q.id)}" data-field="observation">${safe(a.observation)}</textarea>
-        <label>${t("action")}</label>
-        <textarea data-id="${safe(q.id)}" data-field="action">${safe(a.action)}</textarea>
+ html += `</div>
+        <div class="${a.status === "NOK" ? "" : "hidden"}">
+          <label>${t("observation")}</label>
+          <textarea
+            data-id="${safe(q.id)}"
+            data-field="observation"
+            placeholder="Opțional"
+          >${safe(a.observation)}</textarea>
+
+          <label>${t("action")}</label>
+          <textarea
+            data-id="${safe(q.id)}"
+            data-field="action"
+            placeholder="Opțional"
+          >${safe(a.action)}</textarea>
+        </div>
       </div>`;
     });
 
