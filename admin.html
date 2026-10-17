@@ -89,6 +89,21 @@
         magazine și linkuri pentru auditori.
       </p>
       <button id="logoutBtn" class="secondary">Deconectare</button>
+      <div style="margin-top:30px">
+  <h2>Gestionare magazine</h2>
+  <form id="storeForm">
+    <label for="newStore">Nume magazin nou</label>
+    <input id="newStore" type="text"
+           placeholder="Ex.: Promenada Mall"
+           maxlength="100" required>
+    <button id="addStoreBtn" type="submit">
+      Adaugă magazin
+    </button>
+  </form>
+  <p id="storeMessage" role="status"></p>
+  <h3>Magazine existente</h3>
+  <div id="storeList">Se încarcă...</div>
+</div>
       <div id="auditArea" style="margin-top:30px">
   <h2>Audituri salvate</h2>
   <p id="auditStatus" class="muted">Se încarcă auditurile...</p>
@@ -225,7 +240,57 @@ async function loadAudits() {
     rows.appendChild(row);
   });
 }
+    async function loadStores() {
+  const list = document.getElementById("storeList");
+
+  const { data, error } = await client.rpc(
+    "admin_list_stores"
+  );
+
+  if (error) {
+    list.textContent = "Eroare: " + error.message;
+    return;
+  }
+
+  list.replaceChildren();
+
+  data.forEach(store => {
+    const item = document.createElement("p");
+    item.textContent =
+      store.name + (store.is_active ? "" : " (inactiv)");
+    list.appendChild(item);
+  });
+}
+
+document.getElementById("storeForm").addEventListener(
+  "submit",
+  async event => {
+    event.preventDefault();
+
+    const name = document.getElementById("newStore");
+    const button = document.getElementById("addStoreBtn");
+    const message = document.getElementById("storeMessage");
+
+    button.disabled = true;
+    message.textContent = "";
+
+    const { error } = await client.rpc("admin_add_store", {
+      p_name: name.value.trim()
+    });
+
+    if (error) {
+      message.textContent = "Eroare: " + error.message;
+    } else {
+      message.textContent = "Magazin adăugat cu succes!";
+      name.value = "";
+      await loadStores();
+    }
+
+    button.disabled = false;
+  }
+);
     function showAdmin(email) {
+      loadStores();
       loadAudits();
       loginPanel.classList.add("hidden");
       adminPanel.classList.remove("hidden");
