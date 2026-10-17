@@ -531,24 +531,7 @@ if (auditAnswers.some(a => !a.question_id)) {
   alert("Nu am putut identifica unele întrebări în Supabase.");
   return;
 }
-    question_id: questionMap.get(
-      `${q.section}:${positionInSection}`
-    ),
-    answer: answers[q.id]?.status || "",
-    observation: answers[q.id]?.observation || "",
-    corrective_action: answers[q.id]?.action || ""
-  };
-});
 
-if (
-  auditAnswers.some(a =>
-    !a.question_id ||
-    !["OK", "NOK", "N/A"].includes(a.answer)
-  )
-) {
-  alert("Completează toate cele 90 de întrebări înainte de salvare.");
-  return;
-}
 
   try {
     const { data, error } = await supabaseClient.rpc(
