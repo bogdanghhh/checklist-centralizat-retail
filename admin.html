@@ -89,6 +89,28 @@
         magazine și linkuri pentru auditori.
       </p>
       <button id="logoutBtn" class="secondary">Deconectare</button>
+      <div id="auditArea" style="margin-top:30px">
+  <h2>Audituri salvate</h2>
+  <p id="auditStatus" class="muted">Se încarcă auditurile...</p>
+  <div style="overflow-x:auto">
+    <table style="width:100%;border-collapse:collapse;text-align:left">
+      <thead>
+        <tr>
+          <th style="padding:10px">Data</th>
+          <th style="padding:10px">Magazin</th>
+          <th style="padding:10px">Auditor</th>
+          <th style="padding:10px">Verificate</th>
+          <th style="padding:10px">Scor</th>
+        </tr>
+      </thead>
+      <tbody id="auditRows"></tbody>
+    </table>
+  </div>
+  <h3>Detalii audit</h3>
+  <div id="auditDetails" class="muted">
+    Selectează un audit din tabel.
+  </div>
+</div>
     </div>
   </main>
 
@@ -108,8 +130,103 @@
       loginPanel.classList.remove("hidden");
       adminPanel.classList.add("hidden");
     }
+async function loadAudits() {
+  const status = document.getElementById("auditStatus");
+  const rows = document.getElementById("auditRows");
+  const details = document.getElementById("auditDetails");
 
+  status.textContent = "Se încarcă auditurile...";
+  rows.replaceChildren();
+  details.textContent = "Selectează un audit din tabel.";
+
+  const { data: audits, error } = await client
+    .from("audits")
+    .select(`
+      id, audit_date, auditor_name, status, store_id,
+      stores(name),
+      audit_answers(
+        question_ro, answer, observation, corrective_action
+      )
+    `)
+    .order("audit_date", { ascending: false });
+
+  if (error) {
+    status.textContent = "Eroare: " + error.message;
+    return;
+  }
+
+  status.textContent = audits.length
+    ? `${audits.length} audituri găsite`
+    : "Nu există încă audituri salvate.";
+
+  function addCell(row, value) {
+    const cell = document.createElement("td");
+    cell.style.padding = "10px";
+    cell.style.borderBottom = "1px solid #e4eaf1";
+    cell.textContent = value;
+    row.appendChild(cell);
+  }
+
+  audits.forEach(audit => {
+    const answers = audit.audit_answers || [];
+    const ok = answers.filter(a => a.answer.toUpperCase() === "OK").length;
+    const nok = answers.filter(a => a.answer.toUpperCase() === "NOK").length;
+    const evaluated = ok + nok;
+    const score = evaluated
+      ? (100 * ok / evaluated).toFixed(1) + "%"
+      : "—";
+
+    const row = document.createElement("tr");
+    row.style.cursor = "pointer";
+
+    addCell(row, audit.audit_date || "—");
+    addCell(row, audit.stores?.name || "—");
+    addCell(row, audit.auditor_name || "—");
+    addCell(row, answers.length + " / 90");
+    addCell(row, score);
+
+    row.addEventListener("click", () => {
+      details.replaceChildren();
+
+      const heading = document.createElement("p");
+      heading.textContent =
+        `Magazin: ${audit.stores?.name || "—"} | ` +
+        `Data: ${audit.audit_date} | Scor: ${score}`;
+      details.appendChild(heading);
+
+      answers.forEach((answer, index) => {
+        const item = document.createElement("div");
+        item.style.padding = "12px 0";
+        item.style.borderBottom = "1px solid #e4eaf1";
+
+        const title = document.createElement("strong");
+        title.textContent =
+          `${index + 1}. ${answer.question_ro} — ${answer.answer}`;
+        item.appendChild(title);
+
+        if (answer.observation) {
+          const observation = document.createElement("p");
+          observation.textContent =
+            "Observații: " + answer.observation;
+          item.appendChild(observation);
+        }
+
+        if (answer.corrective_action) {
+          const action = document.createElement("p");
+          action.textContent =
+            "Acțiune corectivă: " + answer.corrective_action;
+          item.appendChild(action);
+        }
+
+        details.appendChild(item);
+      });
+    });
+
+    rows.appendChild(row);
+  });
+}
     function showAdmin(email) {
+      loadAudits();
       loginPanel.classList.add("hidden");
       adminPanel.classList.remove("hidden");
       document.getElementById("adminEmail").textContent = email || "";
