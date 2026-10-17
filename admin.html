@@ -1,450 +1,352 @@
 <!DOCTYPE html>
 <html lang="ro">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Administrator | Checklist Centralizat Retail</title>
-  <style>
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      background: #f2f5fa;
-      color: #17243a;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    }
-    header {
-      padding: 24px 18px;
-      background: #123c75;
-      color: white;
-    }
-    header h1 { margin: 0 0 5px; font-size: 23px; }
-    header p { margin: 0; opacity: .85; }
-    main { max-width: 650px; margin: 35px auto; padding: 16px; }
-    .card {
-      background: white;
-      border-radius: 16px;
-      padding: 24px;
-      box-shadow: 0 3px 14px #18375a10;
-    }
-    label { display: block; font-weight: 600; margin: 16px 0 6px; }
-    input {
-      width: 100%;
-      padding: 12px;
-      border: 1px solid #cad3df;
-      border-radius: 9px;
-      font: inherit;
-    }
-    button {
-      padding: 12px 18px;
-      border: 0;
-      border-radius: 9px;
-      background: #1457a6;
-      color: white;
-      font: inherit;
-      font-weight: 600;
-      cursor: pointer;
-      margin-top: 18px;
-    }
-    button:disabled { opacity: .5; cursor: wait; }
-    .secondary { background: #eaf0f8; color: #173a65; }
-    .hidden { display: none; }
-    .error { color: #b82e2e; }
-    .success { color: #18734a; }
-    .muted { color: #66758a; font-size: 14px; }
-    #message { margin-top: 15px; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Administrator | Checklist Centralizat Retail</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#f2f5fa;color:#17243a;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+header{padding:24px 18px;background:#123c75;color:#fff}
+header h1{margin:0 0 5px;font-size:23px}header p{margin:0;opacity:.85}
+main{max-width:980px;margin:25px auto;padding:16px}
+.card{background:white;border-radius:16px;padding:22px;margin-bottom:16px;box-shadow:0 3px 14px #18375a10}
+label{display:block;font-weight:600;margin:16px 0 6px}
+input,select{width:100%;padding:12px;border:1px solid #cad3df;border-radius:9px;background:#fff;font:inherit}
+button{padding:12px 16px;border:0;border-radius:9px;background:#1457a6;color:white;font:inherit;font-weight:600;cursor:pointer}
+button:disabled{opacity:.5;cursor:wait}
+.secondary{background:#eaf0f8;color:#173a65}
+.hidden{display:none!important}
+.error,.negative{color:#b82e2e}.success,.positive{color:#18734a}.muted{color:#66758a;font-size:14px}
+.tabs{display:flex;gap:9px;flex-wrap:wrap;margin:20px 0}
+.tabs button{flex:1;min-width:130px}
+table{width:100%;border-collapse:collapse;text-align:left}
+th,td{padding:10px;border-bottom:1px solid #e4eaf1;vertical-align:top}
+.table-scroll{overflow-x:auto}
+.rank{width:100%;display:flex;gap:12px;align-items:center;text-align:left;background:#f4f7fb;color:#17243a;border:1px solid #dfe7f1;margin:8px 0}
+.rank.active{border:2px solid #1457a6;background:#eaf2ff}
+.rank .rank-name{flex:1;min-width:0}
+.rank .rank-score{font-weight:800;white-space:nowrap}
+.meter{height:7px;background:#dfe5ee;border-radius:6px;overflow:hidden;margin-top:5px}
+.meter>div{height:100%;background:#287b57}
+.metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:15px 0}
+.metric{background:#f3f6fa;border-radius:12px;padding:15px}
+.metric strong{display:block;font-size:25px;margin:6px 0}
+.problem{padding:13px 0;border-bottom:1px solid #e4eaf1}
+.problem:last-child{border-bottom:0}
+.problem p{margin:6px 0}
+.pill{display:inline-block;border-radius:16px;padding:4px 9px;background:#ffeded;color:#b82e2e;font-size:12px;font-weight:700}
+.status{font-weight:700;margin:12px 0}
+.note{background:#fff8e8;padding:12px;border-radius:9px;font-size:13px}
+@media(max-width:540px){.card{padding:16px}.metrics{grid-template-columns:1fr}th,td{padding:7px;font-size:13px}}
+</style>
 </head>
 <body>
-  <header>
-    <h1>Checklist Centralizat Retail</h1>
-    <p>Panou administrator</p>
-  </header>
+<header><h1>Checklist Centralizat Retail</h1><p>Panou administrator</p></header>
+<main>
+  <div class="card" id="loginPanel">
+    <h2>Autentificare administrator</h2>
+    <p class="muted">Folosește contul configurat în Supabase.</p>
+    <form id="loginForm">
+      <label for="email">Adresă de e-mail</label>
+      <input id="email" type="email" autocomplete="username" required>
+      <label for="password">Parolă</label>
+      <input id="password" type="password" autocomplete="current-password" required>
+      <button id="loginBtn" type="submit">Autentificare</button>
+    </form>
+    <p id="message" role="status"></p>
+  </div>
 
-  <main>
-    <div class="card" id="loginPanel">
-      <h2>Autentificare administrator</h2>
-      <p class="muted">Folosește contul configurat în Supabase.</p>
+  <div class="card hidden" id="adminPanel">
+    <h2>Bine ai venit!</h2>
+    <p class="success">Autentificare administrator reușită.</p>
+    <p id="adminEmail" class="muted"></p>
+    <button id="logoutBtn" class="secondary" type="button">Deconectare</button>
+    <div class="tabs">
+      <button id="tabAdmin" type="button">Administrare</button>
+      <button id="tabAnalysis" type="button" class="secondary">Analiză Audit</button>
+    </div>
 
-      <form id="loginForm">
-        <label for="email">Adresă de e-mail</label>
-        <input id="email" type="email" autocomplete="username" required>
-
-        <label for="password">Parolă</label>
-        <input id="password" type="password"
-               autocomplete="current-password" required>
-
-        <button id="loginBtn" type="submit">Autentificare</button>
+    <section id="administrationTab">
+      <h2>Gestionare magazine</h2>
+      <form id="storeForm">
+        <label for="newStore">Nume magazin nou</label>
+        <input id="newStore" placeholder="Ex.: Promenada Mall" maxlength="100" required>
+        <button id="addStoreBtn" type="submit">Adaugă magazin</button>
       </form>
+      <p id="storeMessage" role="status"></p>
+      <h3>Magazine existente</h3>
+      <div id="storeList">Se încarcă...</div>
 
-      <p id="message" role="status"></p>
-    </div>
+      <h2>Audituri salvate</h2>
+      <p id="auditStatus" class="muted">Se încarcă auditurile...</p>
+      <div class="table-scroll">
+        <table><thead><tr><th>Data</th><th>Magazin</th><th>Auditor</th><th>Verificate</th><th>Scor</th></tr></thead>
+        <tbody id="auditRows"></tbody></table>
+      </div>
+      <h3>Detalii audit</h3>
+      <div id="auditDetails" class="muted">Selectează un audit din tabel.</div>
+    </section>
 
-    <div class="card hidden" id="adminPanel">
-      <h2>Bine ai venit!</h2>
-      <p class="success">Autentificare administrator reușită.</p>
-      <p id="adminEmail" class="muted"></p>
-      <p>Contul este pregătit pentru panoul de administrare.</p>
-      <p class="muted">
-        Următorul pas: lista auditurilor, comparații,
-        magazine și linkuri pentru auditori.
-      </p>
-      <button id="logoutBtn" class="secondary">Deconectare</button>
-      <div class="tabs">
-  <button id="tabAdmin" type="button" onclick="showTab('admin')">
-    Administrare
-  </button>
-  <button id="tabAnalysis" type="button" onclick="showTab('analysis')">
-    Analiză Audit
-  </button>
-</div>
-<div id="administrationTab">
-
-  <h2>Gestionare magazine</h2>
-  <form id="storeForm">
-    <label for="newStore">Nume magazin nou</label>
-    <input id="newStore" type="text"
-           placeholder="Ex.: Promenada Mall"
-           maxlength="100" required>
-    <button id="addStoreBtn" type="submit">
-      Adaugă magazin
-    </button>
-  </form>
-  <p id="storeMessage" role="status"></p>
-  <h3>Magazine existente</h3>
-  <div id="storeList">Se încarcă...</div>
-</div>
-    
-<div id="analysisTab" class="hidden">
-      <div style="margin-top:30px" id="compareArea">
-  <h2>Comparații audituri</h2>
-  <label for="compareStore">Alege magazinul</label>
-  <select id="compareStore" style="width:100%;padding:12px;border:1px solid #cad3df;border-radius:9px">
-    <option value="">Toate magazinele</option>
-  </select>
-  <p id="compareSummary" class="muted"></p>
-  <div id="compareResults" style="overflow-x:auto"></div>
-</div>
-</div>
-<div id="administrationAudits">
-      <div id="auditArea" style="margin-top:30px">
-  <h2>Audituri salvate</h2>
-  <p id="auditStatus" class="muted">Se încarcă auditurile...</p>
-  <div style="overflow-x:auto">
-    <table style="width:100%;border-collapse:collapse;text-align:left">
-      <thead>
-        <tr>
-          <th style="padding:10px">Data</th>
-          <th style="padding:10px">Magazin</th>
-          <th style="padding:10px">Auditor</th>
-          <th style="padding:10px">Verificate</th>
-          <th style="padding:10px">Scor</th>
-        </tr>
-      </thead>
-      <tbody id="auditRows"></tbody>
-    </table>
+    <section id="analysisTab" class="hidden">
+      <h2>Clasament magazine — TOP → FLOP</h2>
+      <p class="muted">Fiecare magazin apare o singură dată, cu scorul ultimului audit. Apasă pe un magazin pentru analiză.</p>
+      <div id="ranking">Se încarcă...</div>
+      <div id="storeAnalysis" class="hidden" aria-live="polite"></div>
+    </section>
   </div>
-  <h3>Detalii audit</h3>
-  <div id="auditDetails" class="muted">
-    Selectează un audit din tabel.
-  </div>
-</div>
-    </div>
-    </div>
-  </main>
+</main>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script>
-    const client = window.supabase.createClient(
-      "https://dhjmypzmilvuitqsvvqy.supabase.co",
-      "sb_publishable_NGwEbhHbW5UlrYft_xNHQg_CVNk711z"
-    );
-
-    const loginPanel = document.getElementById("loginPanel");
-    const adminPanel = document.getElementById("adminPanel");
-    const message = document.getElementById("message");
-    const loginBtn = document.getElementById("loginBtn");
-
-    function showLogin() {
-      loginPanel.classList.remove("hidden");
-      adminPanel.classList.add("hidden");
-    }
-    function renderComparisons(audits) {
-  const select = document.getElementById("compareStore");
-  const summary = document.getElementById("compareSummary");
-  const results = document.getElementById("compareResults");
-  const selected = select.value;
-  const stores = [...new Map(audits.filter(a => a.store_id).map(a => [a.store_id, a.stores?.name || "Magazin"])).entries()];
-  select.replaceChildren(new Option("Toate magazinele", ""));
-  stores.sort((a,b) => a[1].localeCompare(b[1], "ro"));
-  stores.forEach(([id,name]) => select.add(new Option(name,id)));
-  if (stores.some(([id]) => id === selected)) select.value = selected;
-
-  function draw() {
-    const filtered = audits.filter(a => !select.value || a.store_id === select.value)
-      .slice().sort((a,b) => (a.audit_date || "").localeCompare(b.audit_date || ""));
-    summary.textContent = filtered.length + " audituri pentru selecția curentă. Scorul exclude răspunsurile N/A.";
-    results.replaceChildren();
-    if (!filtered.length) { results.textContent = "Nu există audituri pentru acest magazin."; return; }
-    const table = document.createElement("table");
-    table.style.cssText = "width:100%;border-collapse:collapse;text-align:left";
-    const head = document.createElement("tr");
-    ["Data", "Magazin", "Auditor", "Verificate", "Scor"].forEach(label => {
-      const th = document.createElement("th"); th.textContent = label; th.style.padding = "9px"; head.appendChild(th);
-    });
-    table.appendChild(head);
-    filtered.forEach(audit => {
-      const answers = audit.audit_answers || [];
-      const ok = answers.filter(a => a.answer === "OK").length;
-      const nok = answers.filter(a => a.answer === "NOK").length;
-      const score = ok + nok ? (100 * ok / (ok + nok)).toFixed(1) + "%" : "—";
-      const tr = document.createElement("tr");
-      [audit.audit_date || "—", audit.stores?.name || "—", audit.auditor_name || "—", answers.length + " / 90", score].forEach(value => {
-        const td = document.createElement("td"); td.textContent = value;
-        td.style.cssText = "padding:9px;border-bottom:1px solid #e4eaf1";
-        tr.appendChild(td);
-      });
-      table.appendChild(tr);
-    });
-    results.appendChild(table);
-  }
-  select.onchange = draw;
-  draw();
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+"use strict";
+const client=window.supabase.createClient(
+  "https://dhjmypzmilvuitqsvvqy.supabase.co",
+  "sb_publishable_NGwEbhHbW5UlrYft_xNHQg_CVNk711z"
+);
+const el=id=>document.getElementById(id);
+let auditData=[],selectedStore=null,requestGeneration=0;
+function node(tag,text,cls){
+  const x=document.createElement(tag);
+  if(text!==undefined && text!==null)x.textContent=String(text);
+  if(cls)x.className=cls;
+  return x;
 }
-async function loadAudits() {
-  const status = document.getElementById("auditStatus");
-  const rows = document.getElementById("auditRows");
-  const details = document.getElementById("auditDetails");
+function append(parent,tag,text,cls){const x=node(tag,text,cls);parent.appendChild(x);return x}
+function dateLabel(s){if(!s)return "—";const p=s.split("-");return p.length===3?`${p[2]}.${p[1]}.${p[0]}`:s}
+function auditSort(a,b){
+  const byDate=(b.audit_date||"").localeCompare(a.audit_date||"");
+  return byDate || (b.created_at||"").localeCompare(a.created_at||"") || String(b.id).localeCompare(String(a.id));
+}
+function counts(a){
+  const answers=a.audit_answers||[];
+  const ok=answers.filter(x=>x.answer==="OK").length;
+  const nok=answers.filter(x=>x.answer==="NOK").length;
+  const na=answers.filter(x=>x.answer==="N/A").length;
+  return {ok,nok,na,total:answers.length,score:ok+nok?100*ok/(ok+nok):null};
+}
+function scoreText(n){return n===null?"—":n.toLocaleString("ro-RO",{minimumFractionDigits:1,maximumFractionDigits:1})+"%"}
+function storeName(a){return a.stores?.name||"Magazin necunoscut"}
+function addCell(row,value){append(row,"td",value)}
+function showLogin(){
+  requestGeneration++;
+  el("loginPanel").classList.remove("hidden");
+  el("adminPanel").classList.add("hidden");
+  auditData=[];selectedStore=null;
+  el("auditRows").replaceChildren();
+  el("ranking").replaceChildren();
+  el("storeAnalysis").replaceChildren();
+}
+function showTab(tab){
+  const admin=tab==="admin";
+  el("administrationTab").classList.toggle("hidden",!admin);
+  el("analysisTab").classList.toggle("hidden",admin);
+  el("tabAdmin").classList.toggle("secondary",!admin);
+  el("tabAnalysis").classList.toggle("secondary",admin);
+}
+el("tabAdmin").addEventListener("click",()=>showTab("admin"));
+el("tabAnalysis").addEventListener("click",()=>showTab("analysis"));
 
-  status.textContent = "Se încarcă auditurile...";
-  rows.replaceChildren();
-  details.textContent = "Selectează un audit din tabel.";
+async function loadStores(){
+  const list=el("storeList");
+  const {data,error}=await client.rpc("admin_list_stores");
+  if(error){list.textContent="Eroare: "+error.message;return}
+  list.replaceChildren();
+  data.forEach(s=>append(list,"p",s.name+(s.is_active?"":" (inactiv)")));
+}
+el("storeForm").addEventListener("submit",async event=>{
+  event.preventDefault();
+  const name=el("newStore"),button=el("addStoreBtn"),msg=el("storeMessage");
+  button.disabled=true;msg.textContent="";
+  try{
+    const {error}=await client.rpc("admin_add_store",{p_name:name.value.trim()});
+    if(error)throw error;
+    msg.textContent="Magazin adăugat cu succes!";
+    msg.className="success";name.value="";
+    await loadStores();
+  }catch(e){msg.className="error";msg.textContent="Eroare: "+e.message}
+  finally{button.disabled=false}
+});
 
-  const { data: audits, error } = await client
-    .from("audits")
-    .select(`
-      id, audit_date, auditor_name, status, store_id,
-      stores(name),
-      audit_answers(
-        question_ro, answer, observation, corrective_action
-      )
-    `)
-    .order("audit_date", { ascending: false });
-
-  if (error) {
-    status.textContent = "Eroare: " + error.message;
+async function loadAudits(){
+  const gen=requestGeneration;
+  el("auditStatus").textContent="Se încarcă auditurile...";
+  const {data,error}=await client.from("audits").select(`
+    id,audit_date,created_at,auditor_name,status,store_id,
+    stores(name),
+    audit_answers(question_id,question_ro,answer,observation,corrective_action)
+  `).order("audit_date",{ascending:false}).order("created_at",{ascending:false});
+  if(gen!==requestGeneration)return;
+  if(error){
+    el("auditStatus").textContent="Eroare: "+error.message;
+    el("ranking").textContent="Nu s-au putut încărca auditurile.";
     return;
   }
-
-  status.textContent = audits.length
-    ? `${audits.length} audituri găsite`
-    : "Nu există încă audituri salvate.";
-  renderComparisons(audits);
-
-
-  function addCell(row, value) {
-    const cell = document.createElement("td");
-    cell.style.padding = "10px";
-    cell.style.borderBottom = "1px solid #e4eaf1";
-    cell.textContent = value;
-    row.appendChild(cell);
-  }
-
-  audits.forEach(audit => {
-    const answers = audit.audit_answers || [];
-    const ok = answers.filter(a => a.answer.toUpperCase() === "OK").length;
-    const nok = answers.filter(a => a.answer.toUpperCase() === "NOK").length;
-    const evaluated = ok + nok;
-    const score = evaluated
-      ? (100 * ok / evaluated).toFixed(1) + "%"
-      : "—";
-
-    const row = document.createElement("tr");
-    row.style.cursor = "pointer";
-
-    addCell(row, audit.audit_date || "—");
-    addCell(row, audit.stores?.name || "—");
-    addCell(row, audit.auditor_name || "—");
-    addCell(row, answers.length + " / 90");
-    addCell(row, score);
-
-    row.addEventListener("click", () => {
-      details.replaceChildren();
-
-      const heading = document.createElement("p");
-      heading.textContent =
-        `Magazin: ${audit.stores?.name || "—"} | ` +
-        `Data: ${audit.audit_date} | Scor: ${score}`;
-      details.appendChild(heading);
-
-      answers.forEach((answer, index) => {
-        const item = document.createElement("div");
-        item.style.padding = "12px 0";
-        item.style.borderBottom = "1px solid #e4eaf1";
-
-        const title = document.createElement("strong");
-        title.textContent =
-          `${index + 1}. ${answer.question_ro} — ${answer.answer}`;
-        item.appendChild(title);
-
-        if (answer.observation) {
-          const observation = document.createElement("p");
-          observation.textContent =
-            "Observații: " + answer.observation;
-          item.appendChild(observation);
-        }
-
-        if (answer.corrective_action) {
-          const action = document.createElement("p");
-          action.textContent =
-            "Acțiune corectivă: " + answer.corrective_action;
-          item.appendChild(action);
-        }
-
-        details.appendChild(item);
-      });
-    });
-
+  auditData=(data||[]).filter(a=>a.status==="finalized").sort(auditSort);
+  el("auditStatus").textContent=`${auditData.length} audituri găsite`;
+  drawAuditTable();
+  drawRanking();
+}
+function drawAuditTable(){
+  const rows=el("auditRows");rows.replaceChildren();
+  el("auditDetails").textContent="Selectează un audit din tabel.";
+  auditData.forEach(a=>{
+    const c=counts(a),row=node("tr");row.style.cursor="pointer";
+    [dateLabel(a.audit_date),storeName(a),a.auditor_name||"—",c.total+" / 90",scoreText(c.score)].forEach(v=>addCell(row,v));
+    row.addEventListener("click",()=>drawAuditDetails(a));
     rows.appendChild(row);
   });
 }
-    async function loadStores() {
-  const list = document.getElementById("storeList");
-
-  const { data, error } = await client.rpc(
-    "admin_list_stores"
-  );
-
-  if (error) {
-    list.textContent = "Eroare: " + error.message;
-    return;
-  }
-
-  list.replaceChildren();
-
-  data.forEach(store => {
-    const item = document.createElement("p");
-    item.textContent =
-      store.name + (store.is_active ? "" : " (inactiv)");
-    list.appendChild(item);
+function drawAuditDetails(a){
+  const root=el("auditDetails");root.replaceChildren();
+  const c=counts(a);
+  append(root,"p",`${storeName(a)} · ${dateLabel(a.audit_date)} · ${scoreText(c.score)} · ${c.total}/90`);
+  (a.audit_answers||[]).forEach((x,i)=>{
+    const p=append(root,"div",undefined,"problem");
+    append(p,"strong",`${i+1}. ${x.question_ro||"Întrebare"} — ${x.answer}`);
+    if(x.observation)append(p,"p","Observație: "+x.observation);
+    if(x.corrective_action)append(p,"p","Acțiune corectivă: "+x.corrective_action);
   });
 }
-
-document.getElementById("storeForm").addEventListener(
-  "submit",
-  async event => {
-    event.preventDefault();
-
-    const name = document.getElementById("newStore");
-    const button = document.getElementById("addStoreBtn");
-    const message = document.getElementById("storeMessage");
-
-    button.disabled = true;
-    message.textContent = "";
-
-    const { error } = await client.rpc("admin_add_store", {
-      p_name: name.value.trim()
-    });
-
-    if (error) {
-      message.textContent = "Eroare: " + error.message;
-    } else {
-      message.textContent = "Magazin adăugat cu succes!";
-      name.value = "";
-      await loadStores();
-    }
-
-    button.disabled = false;
+function drawRanking(){
+  const root=el("ranking");root.replaceChildren();
+  const grouped=new Map();
+  auditData.forEach(a=>{
+    if(!a.store_id)return;
+    if(!grouped.has(a.store_id))grouped.set(a.store_id,[]);
+    grouped.get(a.store_id).push(a);
+  });
+  const entries=[...grouped.entries()].map(([id,audits])=>({
+    id,audits:audits.sort(auditSort),name:storeName(audits[0]),latest:audits[0]
+  })).sort((a,b)=>{
+    const x=counts(a.latest).score,y=counts(b.latest).score;
+    return (y===null?-1:y)-(x===null?-1:x) || a.name.localeCompare(b.name,"ro");
+  });
+  if(!entries.length){
+    root.textContent="Nu există încă magazine auditate.";
+    el("storeAnalysis").classList.add("hidden");
+    return;
   }
-);
-    function showTab(tab) {
-  document.getElementById("administrationTab")
-    .classList.toggle("hidden", tab !== "admin");
-
-  document.getElementById("administrationAudits")
-    .classList.toggle("hidden", tab !== "admin");
-
-  document.getElementById("analysisTab")
-    .classList.toggle("hidden", tab !== "analysis");
-
-  document.getElementById("tabAdmin").classList.toggle(
-    "secondary", tab !== "admin"
-  );
-
-  document.getElementById("tabAnalysis").classList.toggle(
-    "secondary", tab !== "analysis"
-  );
+  entries.forEach((entry,i)=>{
+    const c=counts(entry.latest);
+    const btn=node("button");btn.type="button";btn.className="rank"+(selectedStore===entry.id?" active":"");
+    const rank=append(btn,"strong",`${i+1}.`);
+    rank.style.minWidth="25px";
+    const content=append(btn,"div",undefined,"rank-name");
+    append(content,"strong",entry.name);
+    append(content,"div",`${dateLabel(entry.latest.audit_date)} · ${c.total}/90 verificate`,"muted");
+    const meter=append(content,"div",undefined,"meter");
+    const fill=append(meter,"div");fill.style.width=(c.score??0)+"%";
+    append(btn,"span",scoreText(c.score),"rank-score");
+    btn.addEventListener("click",()=>{
+      selectedStore=selectedStore===entry.id?null:entry.id;
+      drawRanking();
+      if(selectedStore)drawStoreAnalysis(entry);
+      else {el("storeAnalysis").replaceChildren();el("storeAnalysis").classList.add("hidden")}
+    });
+    root.appendChild(btn);
+  });
+  if(selectedStore){
+    const entry=entries.find(x=>x.id===selectedStore);
+    if(entry)drawStoreAnalysis(entry);
+  }
 }
-    function showAdmin(email) {
-      showTab("admin");
-      loadStores();
-      loadAudits();
-      loginPanel.classList.add("hidden");
-      adminPanel.classList.remove("hidden");
-      document.getElementById("adminEmail").textContent = email || "";
+function drawStoreAnalysis(entry){
+  const root=el("storeAnalysis");root.replaceChildren();root.classList.remove("hidden");
+  const audits=entry.audits,latest=audits[0],last=counts(latest);
+  const withScores=audits.filter(a=>counts(a).score!==null);
+  const best=withScores.reduce((b,a)=>!b||counts(a).score>counts(b).score?a:b,null);
+  append(root,"h2","Analiză — "+entry.name);
+  append(root,"p",`${audits.length} audituri în istoric. Scorurile exclud N/A; vezi și numărul întrebărilor verificate.`,"muted");
+  const metrics=append(root,"div",undefined,"metrics");
+  for(const [title,a] of [["Punctaj maxim istoric",best],["Ultimul punctaj",latest]]){
+    const box=append(metrics,"div",undefined,"metric");
+    append(box,"span",title,"muted");
+    append(box,"strong",a?scoreText(counts(a).score):"—");
+    append(box,"span",a?`${dateLabel(a.audit_date)} · ${counts(a).total}/90 verificate`:"Nu există punctaj","muted");
+  }
+  const prev=audits[1],status=append(root,"p",undefined,"status");
+  if(!prev)status.textContent="Evoluție: nu există un audit precedent.";
+  else{
+    const a=last.score,b=counts(prev).score;
+    if(a===null||b===null)status.textContent="Evoluție: scor indisponibil pentru una dintre vizite.";
+    else{
+      const delta=a-b;
+      if(Math.abs(delta)<0.00001)status.textContent="Fără schimbare față de auditul precedent.";
+      else{
+        status.classList.add(delta>0?"positive":"negative");
+        status.textContent=(delta>0?"▲ Îmbunătățire":"▼ Înrăutățire")+
+          ` față de auditul precedent: ${delta>0?"+":""}${delta.toLocaleString("ro-RO",{maximumFractionDigits:1})} puncte procentuale.`;
+      }
     }
+  }
+  append(root,"p","Atenție: auditurile parțiale pot verifica întrebări diferite. Compară scorurile ținând cont de acoperirea fiecărei vizite.","note");
 
-    async function checkAdmin() {
-      const { data: { user }, error: userError } =
-        await client.auth.getUser();
-
-      if (userError || !user) {
-        showLogin();
-        return;
-      }
-
-      const { data, error } = await client.rpc("is_app_admin");
-
-      if (error || data !== true) {
-        await client.auth.signOut();
-        showLogin();
-        message.className = "error";
-        message.textContent =
-          "Contul nu are drepturi de administrator.";
-        return;
-      }
-
-      showAdmin(user.email);
-    }
-
-    document.getElementById("loginForm").addEventListener(
-      "submit",
-      async (event) => {
-        event.preventDefault();
-        message.textContent = "";
-        loginBtn.disabled = true;
-
-        const email = document.getElementById("email").value.trim();
-        const password = document.getElementById("password").value;
-
-        try {
-          const { error } = await client.auth.signInWithPassword({
-            email,
-            password
-          });
-
-          if (error) throw error;
-          await checkAdmin();
-        } catch (error) {
-          message.className = "error";
-          message.textContent =
-            "Autentificare nereușită: " + error.message;
-        } finally {
-          loginBtn.disabled = false;
-          document.getElementById("password").value = "";
-        }
-      }
-    );
-
-    document.getElementById("logoutBtn").addEventListener(
-      "click",
-      async () => {
-        await client.auth.signOut();
-        showLogin();
-        message.textContent = "";
-      }
-    );
-
-    checkAdmin();
-  </script>
+  append(root,"h3","Probleme NOK repetitive — ultimele maximum 4 audituri");
+  const recent=audits.slice(0,4),currentNok=(latest.audit_answers||[]).filter(x=>x.answer==="NOK");
+  const repeated=[];
+  for(const item of currentNok){
+    const key=item.question_id||item.question_ro;
+    const visits=recent.filter(a=>(a.audit_answers||[]).some(x=>
+      (x.question_id||x.question_ro)===key && x.answer==="NOK")).length;
+    if(visits>=2)repeated.push({item,visits});
+  }
+  repeated.sort((a,b)=>b.visits-a.visits);
+  if(!repeated.length)append(root,"p","Nu există probleme NOK repetitive active în ultimele "+recent.length+" vizite.","muted");
+  else repeated.forEach(x=>{
+    const box=append(root,"div",undefined,"problem");
+    append(box,"strong",x.item.question_ro||"Întrebare");
+    append(box,"span",`NOK la ${x.visits} din ${recent.length} vizite`,"pill");
+  });
+  append(root,"h3","Probleme NOK de la ultimul audit");
+  append(root,"p",`${dateLabel(latest.audit_date)} · ${currentNok.length} NOK · ${last.total}/90 întrebări verificate`,"muted");
+  if(!currentNok.length)append(root,"p","La ultimul audit nu au fost înregistrate răspunsuri NOK.","success");
+  else currentNok.forEach((x,i)=>{
+    const box=append(root,"div",undefined,"problem");
+    append(box,"strong",`${i+1}. ${x.question_ro||"Întrebare"}`);
+    append(box,"p","Observație auditor: "+(x.observation?.trim()||"Nespecificat"));
+    append(box,"p","Acțiune corectivă: "+(x.corrective_action?.trim()||"Nespecificat"));
+  });
+}
+function showAdmin(email){
+  el("loginPanel").classList.add("hidden");
+  el("adminPanel").classList.remove("hidden");
+  el("adminEmail").textContent=email||"";
+  showTab("admin");
+  loadStores();loadAudits();
+}
+async function checkAdmin(){
+  const {data:{user},error:userError}=await client.auth.getUser();
+  if(userError||!user){showLogin();return}
+  const {data,error}=await client.rpc("is_app_admin");
+  if(error||data!==true){
+    await client.auth.signOut();showLogin();
+    el("message").className="error";
+    el("message").textContent="Contul nu are drepturi de administrator.";
+    return;
+  }
+  showAdmin(user.email);
+}
+el("loginForm").addEventListener("submit",async event=>{
+  event.preventDefault();el("message").textContent="";
+  el("loginBtn").disabled=true;
+  try{
+    const {error}=await client.auth.signInWithPassword({
+      email:el("email").value.trim(),password:el("password").value
+    });
+    if(error)throw error;
+    await checkAdmin();
+  }catch(e){
+    el("message").className="error";
+    el("message").textContent="Autentificare nereușită: "+e.message;
+  }finally{
+    el("loginBtn").disabled=false;el("password").value="";
+  }
+});
+el("logoutBtn").addEventListener("click",async()=>{
+  await client.auth.signOut();showLogin();el("message").textContent="";
+});
+checkAdmin();
+</script>
 </body>
 </html>
