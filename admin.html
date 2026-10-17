@@ -334,7 +334,11 @@ function drawStoreAnalysis(entry){
   append(root,"h2","Analiză — "+entry.name);
   append(root,"p",`${audits.length} audituri în istoric. Scorurile exclud N/A; vezi și numărul întrebărilor verificate.`,"muted");
   const metrics=append(root,"div",undefined,"metrics");
-  for(const [title,a] of [["Punctaj maxim istoric",best],["Ultimul punctaj",latest]]){
+  for(const [title,a] of [
+  ["Punctaj maxim istoric",best],
+  ["Penultimul audit",audits[1] || null],
+  ["Ultimul punctaj",latest]
+]){
     const box=append(metrics,"div",undefined,"metric");
     append(box,"span",title,"muted");
     append(box,"strong",a?scoreText(counts(a).score):"—");
