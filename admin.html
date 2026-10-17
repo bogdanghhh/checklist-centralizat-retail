@@ -68,6 +68,31 @@ th,td{padding:10px;border-bottom:1px solid #e4eaf1;vertical-align:top}
     </div>
 
     <section id="administrationTab">
+      <div style="margin:20px 0;padding:18px;background:#f0f8f3;border-radius:12px">
+  <h3>Link pentru auditori</h3>
+  <p class="muted">
+    Generează un link securizat pentru toate magazinele active.
+  </p>
+
+  <button
+    type="button"
+    id="whatsappAuditBtn"
+    style="background:#16834a;margin:6px 6px 6px 0"
+  >
+    Trimite pe WhatsApp
+  </button>
+
+  <button
+    type="button"
+    id="copyAuditLinkBtn"
+    class="secondary"
+    style="margin:6px 0"
+  >
+    Copiază linkul
+  </button>
+
+  <p id="auditLinkMessage" role="status" class="muted"></p>
+</div>
       <h2>Gestionare magazine</h2>
       <form id="storeForm">
         <label for="newStore">Nume magazin nou</label>
@@ -346,6 +371,90 @@ el("loginForm").addEventListener("submit",async event=>{
 el("logoutBtn").addEventListener("click",async()=>{
   await client.auth.signOut();showLogin();el("message").textContent="";
 });
+  async function genereazaLinkAudit() {
+  const { data, error } = await client.rpc(
+    "admin_generate_audit_link"
+  );
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  if (!data || typeof data !== "string") {
+    throw new Error("Nu s-a putut genera linkul.");
+  }
+
+  const url = new URL(
+    "https://bogdanghhh.github.io/checklist-centralizat-retail/"
+  );
+
+  url.searchParams.set("token", data);
+  return url.toString();
+}
+
+const mesajAudit = link =>
+  "Bună!\n\n" +
+  "Te invit să completezi auditul operațional al magazinului.\n\n" +
+  "Selectează magazinul, efectuează verificările și salvează auditul.\n\n" +
+  "Accesează formularul aici:\n" +
+  link + "\n\n" +
+  "Mulțumesc!";
+
+document.getElementById("whatsappAuditBtn")
+  .addEventListener("click", async function () {
+    const button = this;
+    const status = document.getElementById("auditLinkMessage");
+
+    // Deschidem fereastra la click, pentru a evita
+    // blocarea ei de către browser.
+    const fereastra = window.open("about:blank", "_blank");
+
+    button.disabled = true;
+    status.textContent = "Se generează linkul...";
+
+    try {
+      const link = await genereazaLinkAudit();
+
+      const whatsappUrl =
+        "https://api.whatsapp.com/send?text=" +
+        encodeURIComponent(mesajAudit(link));
+
+      if (fereastra) {
+        fereastra.location.href = whatsappUrl;
+      } else {
+        window.location.href = whatsappUrl;
+      }
+
+      status.textContent =
+        "Link generat. WhatsApp este pregătit pentru trimitere.";
+    } catch (error) {
+      if (fereastra) fereastra.close();
+      status.textContent = "Eroare: " + error.message;
+    } finally {
+      button.disabled = false;
+    }
+  });
+
+document.getElementById("copyAuditLinkBtn")
+  .addEventListener("click", async function () {
+    const button = this;
+    const status = document.getElementById("auditLinkMessage");
+
+    button.disabled = true;
+    status.textContent = "Se generează linkul...";
+
+    try {
+      const link = await genereazaLinkAudit();
+      await navigator.clipboard.writeText(link);
+
+      status.textContent =
+        "Link nou generat și copiat cu succes!";
+    } catch (error) {
+      status.textContent = "Eroare: " + error.message;
+    } finally {
+      button.disabled = false;
+    }
+  });
 checkAdmin();
 </script>
 </body>
